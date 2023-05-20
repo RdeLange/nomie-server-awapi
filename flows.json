@@ -858,6 +858,18 @@
         "className": ""
     },
     {
+        "id": "5b6cfee18d05bea4",
+        "type": "sqlitedb",
+        "db": "/home/s4e_api_keys",
+        "mode": "RWC"
+    },
+    {
+        "id": "c78d22dfd74427e7",
+        "type": "sqlitedb",
+        "db": "/home/log_entries",
+        "mode": "RWC"
+    },
+    {
         "id": "ad43f11fea0bc39e",
         "type": "function",
         "z": "cc40975d3e02ca4f",
@@ -1098,6 +1110,7 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "SELECT * FROM s4eaw_keys",
+        "payload": "",
         "payloadType": "date",
         "x": 160,
         "y": 308,
@@ -2491,7 +2504,7 @@
         "type": "function",
         "z": "cc40975d3e02ca4f",
         "name": "setlastused",
-        "func": "let key = msg.payload[0].apikey;\nlet query = \"UPDATE s4eaw_api_keys SET lastused = date('now') WHERE apikey = '\" + key + \"'\"\nmsg.payload = query;\nreturn msg;",
+        "func": "let key = msg.payload[0].apikey;\nlet query = \"UPDATE s4eaw_keys SET lastused = date('now') WHERE apikey = '\" + key + \"'\"\nmsg.topic = query;\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -3925,6 +3938,390 @@
             [
                 "25f65e35924156e3"
             ]
+        ]
+    },
+    {
+        "id": "e4532a5647aadd3a",
+        "type": "inject",
+        "z": "c4159a309045cd18",
+        "name": "Select all",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "10",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "SELECT * FROM s4eaw_keys ORDER BY lastused DESC LIMIT 100;",
+        "payload": "",
+        "payloadType": "date",
+        "x": 230,
+        "y": 1080,
+        "wires": [
+            [
+                "cc60d9e5b002d934"
+            ]
+        ]
+    },
+    {
+        "id": "0f0813c5803f57c6",
+        "type": "split",
+        "z": "c4159a309045cd18",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "x": 610,
+        "y": 1080,
+        "wires": [
+            [
+                "f380ce7d5c4d8c71"
+            ]
+        ]
+    },
+    {
+        "id": "f380ce7d5c4d8c71",
+        "type": "function",
+        "z": "c4159a309045cd18",
+        "name": "Calculate days",
+        "func": "const date = new Date().getTime();\nvar checkdate = (date - new Date(msg.payload.lastused).getTime()) / 86400000;\nvar shortkey = msg.payload.apikey.slice(0, 6)+\"...\";\nmsg.payload.apikey = shortkey;\nmsg.payload.delta = checkdate.toFixed(0);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 1080,
+        "wires": [
+            [
+                "e9a74f3faaa91b0f"
+            ]
+        ]
+    },
+    {
+        "id": "e9a74f3faaa91b0f",
+        "type": "join",
+        "z": "c4159a309045cd18",
+        "name": "",
+        "mode": "auto",
+        "build": "object",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "accumulate": "false",
+        "timeout": "",
+        "count": "",
+        "reduceRight": false,
+        "x": 970,
+        "y": 1080,
+        "wires": [
+            [
+                "b3f821bb2cc30926"
+            ]
+        ]
+    },
+    {
+        "id": "b3f821bb2cc30926",
+        "type": "ui_template",
+        "z": "c4159a309045cd18",
+        "group": "93ecb54d9a8159f6",
+        "name": "UI Table Keys",
+        "order": 6,
+        "width": 0,
+        "height": 0,
+        "format": "<table style=\"width:100%\">\n    <tr>\n        <th>Days Ago</th>\n        <th>Key</th>\n    </tr>\n    <tr ng-repeat=\"x in msg.payload | limitTo:200\">\n        <td>{{msg.payload[$index].delta}}</td>\n        <td>{{msg.payload[$index].apikey}}</td>\n    </tr>\n</table>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 1160,
+        "y": 1080,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "cc60d9e5b002d934",
+        "type": "sqlite",
+        "z": "c4159a309045cd18",
+        "mydb": "f90031dbac64edcc",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "S4E AW API Keys",
+        "x": 430,
+        "y": 1080,
+        "wires": [
+            [
+                "0f0813c5803f57c6"
+            ]
+        ]
+    },
+    {
+        "id": "2de2fc16b9350355",
+        "type": "inject",
+        "z": "c4159a309045cd18",
+        "name": "Select all",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "10",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "SELECT * FROM s4eapi ORDER BY createddate ASC LIMIT 100;",
+        "payload": "",
+        "payloadType": "date",
+        "x": 230,
+        "y": 1160,
+        "wires": [
+            [
+                "f23f7fa3d954aaa4"
+            ]
+        ]
+    },
+    {
+        "id": "a042cc229be106e3",
+        "type": "split",
+        "z": "c4159a309045cd18",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "x": 610,
+        "y": 1160,
+        "wires": [
+            [
+                "853a2d500ee9abb4"
+            ]
+        ]
+    },
+    {
+        "id": "853a2d500ee9abb4",
+        "type": "function",
+        "z": "c4159a309045cd18",
+        "name": "Calculate days",
+        "func": "const date = new Date().getTime();\nvar checkdate = (date - new Date(msg.payload.createddate).getTime()) / 86400000;\nvar shortkey = msg.payload.api_key.slice(0, 6)+\"...\";\nmsg.payload.apikey = shortkey;\nmsg.payload.delta = checkdate.toFixed(0);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 1160,
+        "wires": [
+            [
+                "ffbd11b62c9826b3"
+            ]
+        ]
+    },
+    {
+        "id": "ffbd11b62c9826b3",
+        "type": "join",
+        "z": "c4159a309045cd18",
+        "name": "",
+        "mode": "auto",
+        "build": "object",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "accumulate": "false",
+        "timeout": "",
+        "count": "",
+        "reduceRight": false,
+        "x": 970,
+        "y": 1160,
+        "wires": [
+            [
+                "c52a67df8d949bc6"
+            ]
+        ]
+    },
+    {
+        "id": "c52a67df8d949bc6",
+        "type": "ui_template",
+        "z": "c4159a309045cd18",
+        "group": "1de7b2122b938abb",
+        "name": "UI Table NomieApi Syncs",
+        "order": 6,
+        "width": 0,
+        "height": 0,
+        "format": "<table style=\"width:100%\">\n    <tr>\n        <th>Days Ago</th>\n        <th>Key</th>\n    </tr>\n    <tr ng-repeat=\"x in msg.payload | limitTo:200\">\n        <td>{{msg.payload[$index].delta}}</td>\n        <td>{{msg.payload[$index].apikey}}</td>\n    </tr>\n</table>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 1190,
+        "y": 1160,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f23f7fa3d954aaa4",
+        "type": "sqlite",
+        "z": "c4159a309045cd18",
+        "mydb": "339efa184ff7faef",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "AW CONFIG ENTRIES",
+        "x": 440,
+        "y": 1160,
+        "wires": [
+            [
+                "a042cc229be106e3"
+            ]
+        ]
+    },
+    {
+        "id": "d37c5bf2a70df717",
+        "type": "sqlite",
+        "z": "c4159a309045cd18",
+        "mydb": "339efa184ff7faef",
+        "sqlquery": "msg.topic",
+        "sql": "",
+        "name": "AW CONFIG ENTRIES",
+        "x": 440,
+        "y": 1240,
+        "wires": [
+            [
+                "2a7ecba307f044a6"
+            ]
+        ]
+    },
+    {
+        "id": "024251e70e073150",
+        "type": "inject",
+        "z": "c4159a309045cd18",
+        "name": "Select all",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "10",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "SELECT * FROM awconfig_entries ORDER BY createddate ASC LIMIT 100;",
+        "payload": "",
+        "payloadType": "date",
+        "x": 230,
+        "y": 1240,
+        "wires": [
+            [
+                "d37c5bf2a70df717"
+            ]
+        ]
+    },
+    {
+        "id": "2a7ecba307f044a6",
+        "type": "split",
+        "z": "c4159a309045cd18",
+        "name": "",
+        "splt": "\\n",
+        "spltType": "str",
+        "arraySplt": 1,
+        "arraySpltType": "len",
+        "stream": false,
+        "addname": "",
+        "x": 610,
+        "y": 1240,
+        "wires": [
+            [
+                "b82cf31a6a31fbd4"
+            ]
+        ]
+    },
+    {
+        "id": "b82cf31a6a31fbd4",
+        "type": "function",
+        "z": "c4159a309045cd18",
+        "name": "Calculate days",
+        "func": "const date = new Date().getTime();\nvar checkdate = (date - new Date(msg.payload.createddate).getTime()) / 86400000;\nvar shortkey = msg.payload.api_key.slice(0, 6)+\"...\";\nmsg.payload.apikey = shortkey;\nmsg.payload.delta = checkdate.toFixed(0);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 1240,
+        "wires": [
+            [
+                "6229ce4b483c13c9"
+            ]
+        ]
+    },
+    {
+        "id": "6229ce4b483c13c9",
+        "type": "join",
+        "z": "c4159a309045cd18",
+        "name": "",
+        "mode": "auto",
+        "build": "object",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "accumulate": "false",
+        "timeout": "",
+        "count": "",
+        "reduceRight": false,
+        "x": 970,
+        "y": 1240,
+        "wires": [
+            [
+                "e5c779904991f1cb"
+            ]
+        ]
+    },
+    {
+        "id": "e5c779904991f1cb",
+        "type": "ui_template",
+        "z": "c4159a309045cd18",
+        "group": "182a18d1397c23f5",
+        "name": "UI Table Trackable Syncs",
+        "order": 6,
+        "width": 0,
+        "height": 0,
+        "format": "<table style=\"width:100%\">\n    <tr>\n        <th>Days Ago</th>\n        <th>Key</th>\n    </tr>\n    <tr ng-repeat=\"x in msg.payload | limitTo:200\">\n        <td>{{msg.payload[$index].delta}}</td>\n        <td>{{msg.payload[$index].apikey}}</td>\n    </tr>\n</table>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 1190,
+        "y": 1240,
+        "wires": [
+            []
         ]
     },
     {
